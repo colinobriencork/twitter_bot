@@ -3,5 +3,5 @@
 *.png
 *Dockerfile
 *.dockerignore
-*.spyproject
+*.spyproject/
 __pycache__/
