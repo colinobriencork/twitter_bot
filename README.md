@@ -1,6 +1,6 @@
 # twitter_bot
 
-Simple twitter bot to add users, delete added users if they don't follow back, follow users who follow me, like tweets of newly followed users, tweet etc.
+Simple twitter bot to add users, delete added users if they don't follow back, follow users who follow the bot account, like tweets of newly followed users, tweet etc.
 
 **Google:**
 
