@@ -30,10 +30,9 @@ More information can be found here: https://realpython.com/twitter-bot-python-tw
 
 **General:**
 
-Parameters to dictate how the app is to work can be made in two places:
+Parameters to dictate how the app is to work can be made in two modules:
 
 1. app/app.py 
-Here you can parameterize the kinds of users that you're searching for and subsequently add. 
 
   a. less_followers_than
   b. less_friends_than
@@ -45,3 +44,5 @@ This does as it says on the tin. It looks only for users that have less follower
 This defines the length of time (in days) after which it is ok to add users who have previously been added but now sit in the 'Deleted' sheet on Google Sheets having previously been deleted from our friend's list. 
 
 2. app/__main__.py
+
+
