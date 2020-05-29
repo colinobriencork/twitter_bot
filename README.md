@@ -43,6 +43,6 @@ This does as it says on the tin. It looks only for users that have less follower
   
 This defines the length of time (in days) after which it is ok to add users who have previously been added but now sit in the 'Deleted' sheet on Google Sheets having previously been deleted from our friend's list. 
 
-2. app/__main__.py
+2. app/\__main__.py
 
 
