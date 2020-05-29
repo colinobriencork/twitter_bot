@@ -29,3 +29,19 @@ Having gotten access you need to enter 4 environment variables on your machine. 
 More information can be found here: https://realpython.com/twitter-bot-python-tweepy/#the-follow-followers-bot
 
 **General:**
+
+Parameters to dictate how the app is to work can be made in two places:
+
+1. app/app.py 
+Here you can parameterize the kinds of users that you're searching for and subsequently add. 
+
+  a. less_followers_than
+  b. less_friends_than
+  
+This does as it says on the tin. It looks only for users that have less followers than are shown in the parameter, and less friends (people the user has followed) than is shown in the parameter. There is an **important** caveat here: The number in less_followers_than cannot be greater than the number in less_friends_than. This cannot be changed unless you change the code in app/actions.py. The app, by default, only looks for users who are following more people than follow them, the thinking being that these are the kinds of users who are more likely to follow back.
+
+  c. add_deleted_users_since
+  
+This defines the length of time (in days) after which it is ok to add users who have previously been added but now sit in the 'Deleted' sheet on Google Sheets having previously been deleted from our friend's list. 
+
+2. app/__main__.py
