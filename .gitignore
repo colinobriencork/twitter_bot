@@ -3,3 +3,4 @@
 *.png
 *Dockerfile
 *.dockerignore
+__pycache__/

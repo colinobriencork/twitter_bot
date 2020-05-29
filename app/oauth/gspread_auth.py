@@ -11,5 +11,5 @@ import gspread
 
 # use creds to create a client to interact with the Google Drive API
 scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name('./oauth/client_secret.json', scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name('./app/oauth/client_secret.json', scope)
 client = gspread.authorize(creds)

@@ -6,7 +6,7 @@ Created on Tue May  5 11:57:09 2020
 @author: Colin
 """
 
-from information import TweepyInfo, GspreadInfo
+from app.information import TweepyInfo, GspreadInfo
 from datetime import datetime, timedelta
 from gspread_dataframe import set_with_dataframe
 import tweepy, time, requests, os, pandas as pd, numpy as np

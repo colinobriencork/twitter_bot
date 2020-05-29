@@ -5,7 +5,7 @@ Created on Sun May  3 19:42:21 2020
 
 @author: Colin
 """
-import app, datetime
+import app.app as app, datetime
 
 alarm1 = datetime.time(9, 30, 0)
 alarm2 = datetime.time(21, 0, 0)

@@ -5,7 +5,7 @@ Created on Tue May 12 20:11:48 2020
 
 @author: Colin
 """
-import actions
+import app.actions as actions
 
 def main(alarm1, alarm2, query_dict, query_dict_count):
     
