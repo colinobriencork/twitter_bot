@@ -9,9 +9,9 @@ Data is populated into a Google sheet. To get this to work you need to create a 
 https://towardsdatascience.com/accessing-google-spreadsheet-data-using-python-90a5bc214fd2
 https://console.developers.google.com/apis/
 
-This client_secrets.json needs to be placed in the app/oauth/tweepy_auth.py, these are:
+This client_secrets.json needs to be placed in the app/oauth/ folder.
 
-I've called the worksheet that the data goes into "Twitter Bot". Do the same or change that in app/information.py on line 111 - 117. 
+I've called the Google worksheet that the data goes into "Twitter Bot". Do the same or change that in app/information.py on line 111 - 117. 
 
 The dictonary of individual tabs in the worksheet which the app uses is in app/worksheet_dict.py
 
@@ -42,7 +42,7 @@ This does as it says on the tin. It looks only for users that have less follower
 
 c. add_deleted_users_since
   
-This defines the length of time (in days) after which it is ok to add users who have previously been added but now sit in the 'Deleted' tab on Google worksheet having previously been deleted from our friend's list. 
+This defines the length of time (in days) after which it is ok to add users who have previously been added but now sit in the 'Deleted' tab on Google worksheet having previously been unadded and removed from our friend's list. 
 
 2. app/\__main__.py
 
