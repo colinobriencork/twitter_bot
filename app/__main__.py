@@ -15,7 +15,7 @@ query_dict = {v:k for v, k in enumerate(['#datascience',
 
 if __name__ == "__main__":
     while True:
-        if query_dict_count == 4:
+        if query_dict_count == 2:
             query_dict_count = 0
         app.main(alarm1, alarm2, query_dict, query_dict_count)
         query_dict_count = query_dict_count + 1
