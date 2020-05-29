@@ -38,11 +38,11 @@ a. less_followers_than
   
 b. less_friends_than
   
-This does as it says on the tin. It looks only for users that have less followers than are shown in the parameter, and less friends (people the user has followed) than is shown in the parameter. There is an **important** caveat here: The number in less_followers_than cannot be greater than the number in less_friends_than. This cannot be changed unless you change the code in app/actions.py. The app, by default, only looks for users who are following more people than follow them, the thinking being that these are the kinds of users who are more likely to follow back.
+This does as it says on the tin. It looks only for users that have less followers than are shown in the parameter, and less friends (people the user has followed) than are shown in the parameter. There is an **important** caveat here: The number in less_followers_than cannot be greater than the number in less_friends_than. This cannot be changed unless you change the code in app/actions.py. The app, by default, only looks for users who are following more people than follow them, the thinking being that these are the kinds of users who are more likely to follow back.
 
 c. add_deleted_users_since
   
-This defines the length of time (in days) after which it is ok to add users who have previously been added but now sit in the 'Deleted' tab on Google worksheet having previously been unadded and removed from our friend's list. 
+This defines the length of time (in days) after which it is ok to add users who have previously been added but now sit in the 'Deleted' tab on Google worksheet having been unadded and removed from our friend's list. 
 
 2. app/\__main__.py
 
@@ -50,7 +50,7 @@ a. alarm1
   
 b. alarm2
   
-These two variables, which are set and the top of the module and used in the function below, define the two times where the app breaks from it's regular routine (of searching for and adding users) to do basically everything else. The regular routine is to search for users and add them every 15 minutes (this constraint is made by how often the twitter api can be hit).
+These two variables, which are set and the top of the module and are used in the function below, define the two times where the app breaks from it's regular routine (of searching for and adding users) to do basically everything else. The regular routine is to search for users and add them every 15 minutes (this constraint is made by how often the twitter api can be hit).
   
 c. query_dict
   
