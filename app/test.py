@@ -16,3 +16,9 @@ actions.follow_query_users('#datascience',
                            add_deleted_users_since=60,
                            alarm1 = alarm1,
                            alarm2 = alarm2)
+actions.friend_followers()
+actions.like_tweets()
+actions.tweet()
+actions.insert_friend()
+actions.insert_un_newly_followed()
+actions.delete_old_friends(how_old = 5)

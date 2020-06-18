@@ -14,7 +14,8 @@ import tweepy, time, requests, os, pandas as pd, numpy as np
 tweepyinfo = TweepyInfo()
 gspreadinfo = GspreadInfo()
 
-def follow_query_users(query, 
+def follow_query_users(query_count,
+                       query_max,
                        less_followers_than, 
                        less_friends_than, 
                        add_deleted_users_since,
@@ -23,6 +24,8 @@ def follow_query_users(query,
     
     my_friends = tweepyinfo.get_user_friends(user_name="another_analyst")
     my_followers = tweepyinfo.get_user_followers(user_name="another_analyst")
+    query_words = pd.read_csv('./app/KeywordList.csv')['Query']
+    query_max = len(query_words)
     
     dataframe = pd.DataFrame(gspreadinfo.deleted_sheet.get_all_records())
     good_to_add = dataframe.loc[pd.to_datetime(dataframe['Deleted Date']) < datetime.now()-timedelta(days=add_deleted_users_since)]['Screen Name'].values.tolist()
@@ -32,8 +35,10 @@ def follow_query_users(query,
     
     time_capture = datetime.now().time()
     
-    while tweepyinfo.time_constraints(time_capture=time_capture, alarm1=alarm1, alarm2=alarm2):     
-        for page in tweepy.Cursor(tweepyinfo.api.search_users, q=query, count=200).pages():
+    while tweepyinfo.time_constraints(time_capture=time_capture, alarm1=alarm1, alarm2=alarm2):
+        if query_count == query_max:
+            query_count = 0    
+        for page in tweepy.Cursor(tweepyinfo.api.search_users, q=query_words.loc[query_count]).pages(51):
             if tweepyinfo.time_constraints(time_capture=time_capture, alarm1=alarm1, alarm2=alarm2) == False:
                 break            
             for user in page:
@@ -72,7 +77,8 @@ def follow_query_users(query,
                     except Exception as e: print(e)
                 else:
                     pass
-    return
+        query_count += 1
+    return query_count, query_max
 
 def friend_followers():
     
