@@ -82,7 +82,7 @@ def follow_query_users(query_count,
 
 def friend_followers():
     
-    for follower in tweepy.Cursor(tweepyinfo.api.followers).items():
+    for follower in tweepy.Cursor(tweepyinfo.api.followers, count=200).items():
         if not follower.following:
             try:
                 follower.follow()
@@ -151,9 +151,7 @@ def tweet():
         time.sleep(1)
         url = gspreadinfo.tweets_sheet.acell('B' + str(potential_tweets[0].row)).value
         time.sleep(1)
-
         tweet_image(message, url)
-
         gspreadinfo.tweets_sheet.update_cell(potential_tweets[0].row, potential_tweets[0].col, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         time.sleep(1)
     except:

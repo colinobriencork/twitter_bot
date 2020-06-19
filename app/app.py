@@ -9,6 +9,12 @@ import app.actions as actions, datetime
 
 def main(query_count, query_max):
     
+    actions.friend_followers()
+    actions.like_tweets()
+    actions.tweet()
+    actions.insert_friend()
+    actions.insert_un_newly_followed()
+    actions.delete_old_friends(how_old = 5)
     query_count, query_max = actions.follow_query_users(query_count,
                                                         query_max,
                                                         less_followers_than=3000, 
@@ -16,10 +22,4 @@ def main(query_count, query_max):
                                                         add_deleted_users_since=60,
                                                         alarm1 = datetime.time(9, 30, 0),
                                                         alarm2 = datetime.time(21, 0, 0))
-    actions.friend_followers()
-    actions.like_tweets()
-    actions.tweet()
-    actions.insert_friend()
-    actions.insert_un_newly_followed()
-    actions.delete_old_friends(how_old = 5)
     return query_count, query_max

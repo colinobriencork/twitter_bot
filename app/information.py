@@ -17,18 +17,18 @@ class TweepyInfo():
          
     def get_user_followers(self, user_name):
         followers = []
-        for page in tweepy.Cursor(api.followers, screen_name=user_name).pages():
+        for page in tweepy.Cursor(api.followers, screen_name=user_name, count=200).pages():
             try:
                 followers.extend(page)
             except tweepy.TweepError as e:
                 print("Going to sleep:", e)
-                time.sleep(60)
+                time.sleep(1)
         followers = [i.screen_name for i in followers]
         return followers
     
     def get_user_friends(self, user_name):
         friends = []
-        for page in tweepy.Cursor(api.friends, screen_name=user_name).pages():
+        for page in tweepy.Cursor(api.friends, screen_name=user_name, count=200).pages():
             try:
                 friends.extend(page)
             except tweepy.TweepError as e:
@@ -39,7 +39,7 @@ class TweepyInfo():
     
     def user_favorites_list(self, screen_name):
         favs = []
-        for page in tweepy.Cursor(api.favorites, id=screen_name).pages():
+        for page in tweepy.Cursor(api.favorites, id=screen_name, count=200).pages():
             favs.append([tweet.id for tweet in page])
         return [item for elem in favs for item in elem]
     
