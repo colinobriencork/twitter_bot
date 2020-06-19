@@ -30,7 +30,7 @@ More information can be found here: https://realpython.com/twitter-bot-python-tw
 
 **General:**
 
-Parameters to dictate how the app is to work can be made in two modules:
+Parameters to dictate how the app is to work can be made in the app module:
 
 1. app/app.py 
 
@@ -44,14 +44,16 @@ c. add_deleted_users_since
   
 This defines the length of time (in days) after which it is ok to add users who have previously been added but now sit in the 'Deleted' tab on Google worksheet having been unadded and removed from our friend's list. 
 
-2. app/\__main__.py
-
-a. alarm1
+d. alarm1
   
-b. alarm2
+e. alarm2
   
 These two variables, which are set and the top of the module and are used in the function below, define the two times where the app breaks from it's regular routine (of searching for and adding users) to do basically everything else. The regular routine is to search for users and add them every 15 minutes (this constraint is made by how often the twitter api can be hit).
   
-c. query_dict
+f. how old
   
-The last thing to enter is a list of query search terms which will help the app to narrow down it's search for users. The app cycles to the next term down the list after each alarm (alarm1, alarm2), reseting when the end of the list has been reached.
+This looks at the friends list (the people who have been followed) and determines how long after the bot has followed them do you want to delete them as friends if they haven't followed back. It's in days.
+
+2. KeywordList.csv
+
+This is a list of all the query words to be used by the bot to find people to add as friends. The bot cycles through this list repeatedly. The first line 'Query' is a header and is not to be changed. When performing a search for users the basic Twitter API will return the first 1000 users based on the query that's entered. That 1000 will not change if you run it again so it's important to have a large list of query words to cycle through to find new users. 
