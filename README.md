@@ -54,6 +54,6 @@ f. how old
   
 This looks at the friends list (the people who have been followed) and determines how long after the bot has followed them do you want to delete them as friends if they haven't followed back. It's in days.
 
-2. KeywordList.csv
+2. app/KeywordList.csv
 
 This is a list of all the query words to be used by the bot to find people to add as friends. The bot cycles through this list repeatedly. The first line 'Query' is a header and is not to be changed. When performing a search for users the basic Twitter API will return the first 1000 users based on the query that's entered. That 1000 will not change if you run it again so it's important to have a large list of query words to cycle through to find new users. 
