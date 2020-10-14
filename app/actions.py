@@ -6,6 +6,8 @@ Created on Tue May  5 11:57:09 2020
 @author: Colin
 """
 
+#need to resize the friends added sheet and deleted sheet
+
 from app.information import TweepyInfo, GspreadInfo
 from datetime import datetime, timedelta
 from gspread_dataframe import set_with_dataframe
@@ -13,6 +15,18 @@ import tweepy, time, requests, os, pandas as pd, numpy as np
 
 tweepyinfo = TweepyInfo()
 gspreadinfo = GspreadInfo()
+
+def delete_perished_users(sheet):
+    screen_names = sheet.range("A2:A{}".format(sheet.row_count))
+    screen_names = [user for user in screen_names if user.value != '']
+    time.sleep(1)
+    for user in screen_names:
+        try:
+            tweepyinfo.api.get_user(user.value)
+        except:
+            print(user.value)
+            sheet.delete_rows(user.row)
+            time.sleep(1)
 
 def follow_query_users(query_count,
                        query_max,
@@ -22,8 +36,8 @@ def follow_query_users(query_count,
                        alarm1,
                        alarm2):
     
-    my_friends = tweepyinfo.get_user_friends(user_name="another_analyst")
-    my_followers = tweepyinfo.get_user_followers(user_name="another_analyst")
+    my_friends = tweepyinfo.get_user_friends(user_name="_data_engineer")
+    my_followers = tweepyinfo.get_user_followers(user_name="_data_engineer")
     query_words = pd.read_csv('./app/KeywordList.csv')['Query']
     query_max = len(query_words)
     
@@ -62,7 +76,11 @@ def follow_query_users(query_count,
                         index = gspreadinfo.next_available_row(gspreadinfo.friends_added_sheet)
                         time.sleep(1)
                         print('got here1')
-                        gspreadinfo.friends_added_sheet.insert_row(user_data, index)
+                        try:
+                            gspreadinfo.friends_added_sheet.insert_row(user_data, index)
+                        except:
+                            gspreadinfo.friends_added_sheet.resize(rows=gspreadinfo.friends_added_sheet.row_count+10)
+                            gspreadinfo.friends_added_sheet.insert_row(user_data, index)
                         time.sleep(1)
                         print('got here2')
                         
@@ -92,36 +110,46 @@ def friend_followers():
             pass
         
 def like_tweets(max_tweet_likes = 3):
-    
+
     time.sleep(2)
-    first_column = gspreadinfo.friends_added_sheet.range("N2:N{}".format(gspreadinfo.friends_added_sheet.row_count))
-    column_list = [i for i in first_column if i.value != '' and int(i.value) < max_tweet_likes]
-    my_favs = tweepyinfo.user_favorites_list("another_analyst")
+    likes_num_column = gspreadinfo.friends_added_sheet.range("N2:N{}".format(gspreadinfo.friends_added_sheet.row_count))
+    potential_like_list = [i for i in likes_num_column if i.value != '' and int(i.value) < max_tweet_likes]
+    my_favs = tweepyinfo.user_favorites_list("_data_engineer")
 
-    for cell in column_list:
+    for cell in potential_like_list:
         screen_name = gspreadinfo.friends_added_sheet.acell('A' + str(cell.row)).value
-        time.sleep(1)
-        tweets = tweepyinfo.api.user_timeline(screen_name = screen_name, count = 100, include_rts = False)
-        list_of_potential_favs = [i.id for i in tweets if i.id not in my_favs]
+        #check if the user still exists, if not pass
+        try:
+            user = tweepyinfo.api.get_user(screen_name)
+            if user.protected == True:
+                pass
+            else:
+                time.sleep(1)
+                tweets = tweepyinfo.api.user_timeline(screen_name = screen_name, count = 100, include_rts = False)
+                list_of_potential_favs = [i.id for i in tweets if i.id not in my_favs]
+                
+                #if there is nothing in the list
+                if not list_of_potential_favs:
+                    pass
+                else:
+                    like_count = int(cell.value)
+                    #np.random.randint(4) needs to be 4 because it only returns 3
+                    loop_range = range(len(list_of_potential_favs)) if len(list_of_potential_favs) < 3 else range(np.random.randint(4))
         
-        #if there is nothing in the list
-        if not list_of_potential_favs:
+                    for like in loop_range:
+                        random_number = np.random.randint(len(list_of_potential_favs))
+                        tweepyinfo.api.create_favorite(list_of_potential_favs[random_number])
+                        del list_of_potential_favs[random_number]
+                        like_count = like_count + 1
+                        print(str(like) + ' like count:' + str(like_count) + ' ' + screen_name)
+                        if like_count == max_tweet_likes:
+                            break
+                    gspreadinfo.friends_added_sheet.update_cell(cell.row, cell.col, str(like_count))
+                    time.sleep(1)
+        except:
             pass
-        else:
-            like_count = int(cell.value)
-            #np.random.randint(4) needs to be 4 because it only returns 3
-            loop_range = range(len(list_of_potential_favs)) if len(list_of_potential_favs) < 3 else range(np.random.randint(4))
 
-            for like in loop_range:
-                random_number = np.random.randint(len(list_of_potential_favs))
-                tweepyinfo.api.create_favorite(list_of_potential_favs[random_number])
-                del list_of_potential_favs[random_number]
-                like_count = like_count + 1
-                print(str(like) + ' like count:' + str(like_count) + ' ' + screen_name)
-                if like_count == max_tweet_likes:
-                    break
-            gspreadinfo.friends_added_sheet.update_cell(cell.row, cell.col, str(like_count))
-            time.sleep(1)
+
             
 def tweet():
     
@@ -158,23 +186,28 @@ def tweet():
         print('no tweets')
 
 def delete_old_friends(how_old = 4):
+    #match followers sheet against followers from friends added followers
+    #if one exists in friends added sheet but doesn't exist in followers, 
+    # 1  Check if user exists and if they don't, delete from both sheets. 
+    # 2. Move to delete sheet from friends sheet if user has unfollowed or has not followed back in time.
     
-    #to capture people that followed and then unfollowed
-    unfollowed = pd.DataFrame(gspreadinfo.unfollowed_me_sheet.get_all_records())
-    time.sleep(1)
-    unfollowed['Date Updated'] = pd.to_datetime(unfollowed['Date Updated'])
-    unfollowed = unfollowed.sort_values('Date Updated').groupby('Unfollower').tail(1)
+    #use gspread module and delete by cell reference instead
+    delete_perished_users(gspreadinfo.friends_added_sheet)
+    delete_perished_users(gspreadinfo.followers_sheet)
     
     dataframe = pd.DataFrame(gspreadinfo.friends_added_sheet.get_all_records())
     time.sleep(1)
-    dataframe = dataframe.merge(unfollowed, left_on = 'Screen Name', right_on = 'Unfollower', how='left')
+    
+    #to capture people that followed and then unfollowed
+    my_followers = tweepyinfo.get_user_followers(user_name="_data_engineer")
+    old_followers = [i.value for i in gspreadinfo.followers_sheet.range("A2:A{}".format(gspreadinfo.followers_sheet.row_count))]
+    time.sleep(1)
+    unfollowed = [i for i in old_followers if i not in my_followers]
     
     dataframe = dataframe.loc[((pd.to_datetime(dataframe['Date Added']).dt.date <= datetime.now().date()-timedelta(days=how_old)) &
-                              (dataframe['Follow Back'] == '')) | 
-                              (dataframe['Date Updated'] > pd.to_datetime(dataframe['Follow Back Date Updated']))]
+                               (dataframe['Follow Back'] == '')) | 
+                                dataframe['Screen Name'].isin(unfollowed)]
     dataframe['Deleted Date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    #delete columns from the unfollowers
-    dataframe.drop(['Unfollower', 'Date Updated'], axis=1, inplace=True)
     
     for i in dataframe['Screen Name'].values.tolist():
         try:
@@ -189,7 +222,7 @@ def delete_old_friends(how_old = 4):
 
 def insert_friend():
     
-    my_friends = tweepyinfo.get_user_friends(user_name="another_analyst")
+    my_friends = tweepyinfo.get_user_friends(user_name="_data_engineer")
     gspreadinfo.friends_sheet.resize(rows=1)
     time.sleep(1)
     friends_df = pd.DataFrame({'Friend': my_friends, 'Date Updated': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
@@ -198,9 +231,16 @@ def insert_friend():
 
 def insert_un_newly_followed():
     
-    old_followers = gspreadinfo.followers_sheet.col_values(1)[1:]
+    old_followers_prelim = gspreadinfo.followers_sheet.col_values(1)[1:]
+    old_followers = []
+    for user in old_followers_prelim:
+        try:
+            #to check if the user still exists and hasn't been deleted
+            old_followers.append(tweepyinfo.api.get_user(user).screen_name)
+        except:
+            pass
     time.sleep(1)
-    new_followers = tweepyinfo.get_user_followers(user_name = "another_analyst")
+    new_followers = tweepyinfo.get_user_followers(user_name = "_data_engineer")
     unfollowed = [i for i in old_followers if i not in new_followers]
     newly_followed = [i for i in new_followers if i not in old_followers]
     
