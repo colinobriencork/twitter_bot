@@ -5,10 +5,10 @@ Created on Sun May  3 19:36:01 2020
 
 @author: Colin
 """
-from app.oauth.tweepy_auth import api
-from app.oauth.gspread_auth import client
+from oauth.tweepy_auth import api
+from oauth.gspread_auth import client
 from datetime import datetime
-from app.worksheet_dict import worksheet
+from worksheet_dict import worksheet
 import tweepy, time
 
 class TweepyInfo():

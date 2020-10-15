@@ -8,15 +8,11 @@ Created on Tue May  5 11:57:09 2020
 
 #need to resize the friends added sheet and deleted sheet
 
-from app.information import TweepyInfo, GspreadInfo
 from datetime import datetime, timedelta
 from gspread_dataframe import set_with_dataframe
 import tweepy, time, requests, os, pandas as pd, numpy as np
 
-tweepyinfo = TweepyInfo()
-gspreadinfo = GspreadInfo()
-
-def delete_perished_users(sheet):
+def delete_perished_users(tweepyinfo, sheet):
     screen_names = sheet.range("A2:A{}".format(sheet.row_count))
     screen_names = [user for user in screen_names if user.value != '']
     time.sleep(1)
@@ -25,10 +21,12 @@ def delete_perished_users(sheet):
             tweepyinfo.api.get_user(user.value)
         except:
             print(user.value)
-            sheet.delete_rows(user.row)
+            sheet.delete_rows(sheet.find(user.value).row)
             time.sleep(1)
 
-def follow_query_users(query_count,
+def follow_query_users(tweepyinfo,
+                       gspreadinfo,
+                       query_count,
                        query_max,
                        less_followers_than, 
                        less_friends_than, 
@@ -38,7 +36,7 @@ def follow_query_users(query_count,
     
     my_friends = tweepyinfo.get_user_friends(user_name="_data_engineer")
     my_followers = tweepyinfo.get_user_followers(user_name="_data_engineer")
-    query_words = pd.read_csv('./app/KeywordList.csv')['Query']
+    query_words = pd.read_csv('./twitter_bot/KeywordList.csv')['Query']
     query_max = len(query_words)
     
     dataframe = pd.DataFrame(gspreadinfo.deleted_sheet.get_all_records())
@@ -98,7 +96,7 @@ def follow_query_users(query_count,
         query_count += 1
     return query_count, query_max
 
-def friend_followers():
+def friend_followers(tweepyinfo):
     
     for follower in tweepy.Cursor(tweepyinfo.api.followers, count=200).items():
         if not follower.following:
@@ -109,7 +107,7 @@ def friend_followers():
         else:
             pass
         
-def like_tweets(max_tweet_likes = 3):
+def like_tweets(tweepyinfo, gspreadinfo, max_tweet_likes = 3):
 
     time.sleep(2)
     likes_num_column = gspreadinfo.friends_added_sheet.range("N2:N{}".format(gspreadinfo.friends_added_sheet.row_count))
@@ -151,9 +149,9 @@ def like_tweets(max_tweet_likes = 3):
 
 
             
-def tweet():
+def tweet(tweepyinfo, gspreadinfo):
     
-    def tweet_image(message, url=''):
+    def tweet_image(tweepyinfo, message, url=''):
     
         if url != '':
             filename = 'temp.jpg'
@@ -185,31 +183,16 @@ def tweet():
     except:
         print('no tweets')
 
-def delete_old_friends(how_old = 4):
-    #match followers sheet against followers from friends added followers
-    #if one exists in friends added sheet but doesn't exist in followers, 
-    # 1  Check if user exists and if they don't, delete from both sheets. 
-    # 2. Move to delete sheet from friends sheet if user has unfollowed or has not followed back in time.
+def delete_old_friends(tweepyinfo, gspreadinfo, how_old = 4):
     
-    #use gspread module and delete by cell reference instead
-    delete_perished_users(gspreadinfo.friends_added_sheet)
-    delete_perished_users(gspreadinfo.followers_sheet)
-    
-    dataframe = pd.DataFrame(gspreadinfo.friends_added_sheet.get_all_records())
+    friends_added = pd.DataFrame(gspreadinfo.friends_added_sheet.get_all_records())
     time.sleep(1)
     
-    #to capture people that followed and then unfollowed
-    my_followers = tweepyinfo.get_user_followers(user_name="_data_engineer")
-    old_followers = [i.value for i in gspreadinfo.followers_sheet.range("A2:A{}".format(gspreadinfo.followers_sheet.row_count))]
-    time.sleep(1)
-    unfollowed = [i for i in old_followers if i not in my_followers]
+    friends_added_to_delete = friends_added.loc[(pd.to_datetime(friends_added['Date Added']).dt.date <= datetime.now().date()-timedelta(days=how_old)) &
+                                                (friends_added['Follow Back'] == '')]
+    friends_added_to_delete['Deleted Date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    dataframe = dataframe.loc[((pd.to_datetime(dataframe['Date Added']).dt.date <= datetime.now().date()-timedelta(days=how_old)) &
-                               (dataframe['Follow Back'] == '')) | 
-                                dataframe['Screen Name'].isin(unfollowed)]
-    dataframe['Deleted Date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    for i in dataframe['Screen Name'].values.tolist():
+    for i in friends_added_to_delete['Screen Name'].values.tolist():
         try:
             tweepyinfo.api.destroy_friendship(i)
             gspreadinfo.friends_added_sheet.delete_rows(gspreadinfo.friends_added_sheet.find(i).row)
@@ -217,10 +200,10 @@ def delete_old_friends(how_old = 4):
             print(i)
         except Exception as e: print(e)
     
-    set_with_dataframe(gspreadinfo.deleted_sheet, dataframe, row=gspreadinfo.next_available_row(gspreadinfo.deleted_sheet), include_column_header=False)
+    set_with_dataframe(gspreadinfo.deleted_sheet, friends_added_to_delete, row=gspreadinfo.next_available_row(gspreadinfo.deleted_sheet), include_column_header=False)
     time.sleep(1)
 
-def insert_friend():
+def insert_friend(tweepyinfo, gspreadinfo):
     
     my_friends = tweepyinfo.get_user_friends(user_name="_data_engineer")
     gspreadinfo.friends_sheet.resize(rows=1)
@@ -229,7 +212,7 @@ def insert_friend():
     gspreadinfo.friends_sheet.update([friends_df.columns.values.tolist()] + friends_df.values.tolist())
     time.sleep(1)
 
-def insert_un_newly_followed():
+def insert_un_newly_followed(tweepyinfo, gspreadinfo):
     
     old_followers_prelim = gspreadinfo.followers_sheet.col_values(1)[1:]
     old_followers = []
@@ -247,14 +230,32 @@ def insert_un_newly_followed():
     if not unfollowed:
         pass
     else:
+        friends_added = pd.DataFrame(gspreadinfo.friends_added_sheet.get_all_records())
+        friends_added_unfollowed = friends_added[friends_added['Screen Name'].isin(unfollowed)]
+            
         for i in unfollowed:
+            if friends_added_unfollowed.empty:
+                pass
+            else:
+                try:
+                    tweepyinfo.api.destroy_friendship(i)
+                    gspreadinfo.friends_added_sheet.delete_rows(gspreadinfo.friends_added_sheet.find(i).row)
+                    time.sleep(1)
+                except:
+                    pass
+            
             l = [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
             l.insert(0, i)
             index = gspreadinfo.next_available_row(gspreadinfo.unfollowed_me_sheet)
             time.sleep(1)
             gspreadinfo.unfollowed_me_sheet.insert_row(l, index)
             time.sleep(1)
-    
+        
+        #add unfollowed users from friends added sheet to deleted sheet
+        friends_added_unfollowed['Deleted Date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        set_with_dataframe(gspreadinfo.deleted_sheet, friends_added_unfollowed, row=gspreadinfo.next_available_row(gspreadinfo.deleted_sheet), include_column_header=False)
+        time.sleep(1)
+        
     if not newly_followed:
         pass
     else:
@@ -301,7 +302,7 @@ def insert_un_newly_followed():
                 time.sleep(1)
      
     #update the followers sheet with the new followers list      
-    followers_df= pd.DataFrame({'Follower': new_followers, 'Date Updated': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    followers_df = pd.DataFrame({'Follower': new_followers, 'Date Updated': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
     gspreadinfo.followers_sheet.resize(rows=1)
     time.sleep(1)
     gspreadinfo.followers_sheet.update([followers_df.columns.values.tolist()] + followers_df.values.tolist())

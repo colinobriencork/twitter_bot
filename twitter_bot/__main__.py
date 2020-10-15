@@ -5,7 +5,7 @@ Created on Sun May  3 19:42:21 2020
 
 @author: Colin
 """
-import app.app as app
+import app as app
 
 query_count = 0
 query_max = 0
