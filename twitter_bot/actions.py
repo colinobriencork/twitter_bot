@@ -14,14 +14,14 @@ import tweepy, time, requests, os, pandas as pd, numpy as np
 
 def delete_perished_users(tweepyinfo, sheet):
     screen_names = sheet.range("A2:A{}".format(sheet.row_count))
-    screen_names = [user for user in screen_names if user.value != '']
+    screen_names = [user.value for user in screen_names if user.value != '']
     time.sleep(1)
     for user in screen_names:
         try:
-            tweepyinfo.api.get_user(user.value)
+            tweepyinfo.api.get_user(user)
         except:
-            print(user.value)
-            sheet.delete_rows(sheet.find(user.value).row)
+            print(user)
+            sheet.delete_rows(sheet.find(user).row)
             time.sleep(1)
 
 def follow_query_users(tweepyinfo,
