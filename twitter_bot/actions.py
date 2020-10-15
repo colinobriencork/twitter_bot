@@ -76,9 +76,7 @@ def follow_query_users(tweepyinfo,
                         print('got here1')
                         try:
                             gspreadinfo.friends_added_sheet.insert_row(user_data, index)
-                        except:
-                            gspreadinfo.friends_added_sheet.resize(rows=gspreadinfo.friends_added_sheet.row_count+10)
-                            gspreadinfo.friends_added_sheet.insert_row(user_data, index)
+                        except Exception as e: print(e) 
                         time.sleep(1)
                         print('got here2')
                         
