@@ -214,14 +214,7 @@ def insert_friend(tweepyinfo, gspreadinfo):
 
 def insert_un_newly_followed(tweepyinfo, gspreadinfo):
     
-    old_followers_prelim = gspreadinfo.followers_sheet.col_values(1)[1:]
-    old_followers = []
-    for user in old_followers_prelim:
-        try:
-            #to check if the user still exists and hasn't been deleted
-            old_followers.append(tweepyinfo.api.get_user(user).screen_name)
-        except:
-            pass
+    old_followers = gspreadinfo.followers_sheet.col_values(1)[1:]
     time.sleep(1)
     new_followers = tweepyinfo.get_user_followers(user_name = "_data_engineer")
     unfollowed = [i for i in old_followers if i not in new_followers]
