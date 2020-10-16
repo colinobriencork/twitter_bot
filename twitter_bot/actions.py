@@ -17,12 +17,17 @@ def delete_perished_users(tweepyinfo, sheet):
     screen_names = [user.value for user in screen_names if user.value != '']
     time.sleep(1)
     for user in screen_names:
-        try:
-            tweepyinfo.api.get_user(user)
-        except:
-            print(user)
-            sheet.delete_rows(sheet.find(user).row)
-            time.sleep(1)
+        while True:
+            try:
+                tweepyinfo.api.get_user(user)
+                break
+            except Exception as e:
+                if str(e).find('User not found.') != -1:
+                    print(user)
+                    sheet.delete_rows(sheet.find(user).row)
+                    time.sleep(1)
+                    break
+                time.sleep(1)
 
 def follow_query_users(tweepyinfo,
                        gspreadinfo,
@@ -76,16 +81,15 @@ def follow_query_users(tweepyinfo,
                         print('got here1')
                         try:
                             gspreadinfo.friends_added_sheet.insert_row(user_data, index)
+                            if user.screen_name in good_to_add:
+                                gspreadinfo.deleted_sheet.delete_rows(gspreadinfo.deleted_sheet.find(user.screen_name).row)
+                                time.sleep(1)
+                                print('got here3')
+                            print(f"{user.screen_name}")
+                            my_friends.append(user.screen_name)
                         except Exception as e: print(e) 
                         time.sleep(1)
                         print('got here2')
-                        
-                        if user.screen_name in good_to_add:
-                            gspreadinfo.deleted_sheet.delete_rows(gspreadinfo.deleted_sheet.find(user.screen_name).row)
-                            time.sleep(1)
-                            print('got here3')
-                        print(f"{user.screen_name}")
-                        my_friends.append(user.screen_name)
                         tweepyinfo.twitter_rates()
                         time.sleep(900)
                     except Exception as e: print(e)
